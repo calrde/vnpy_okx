@@ -427,9 +427,10 @@ class OkxRestApi(RestClient):
                     m = data["msg"]
                     msg = f"No kline history data is received, {m}"
                     break
-
+                #https://www.okx.com/docs-v5/zh/#order-book-trading-market-data-get-candlesticks-history
+                #[ts,o,h,l,c,vol,volCcy,volCcyQuote,confirm]
                 for bar_list in data["data"]:
-                    ts, o, h, l, c, vol, _ = bar_list
+                    ts,o,h,l,c,vol,volCcy,volCcyQuote,confirm = bar_list
                     dt = parse_timestamp(ts)
                     bar: BarData = BarData(
                         symbol=req.symbol,
