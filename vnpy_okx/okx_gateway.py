@@ -357,7 +357,7 @@ class OkxRestApi(RestClient):
             if product == Product.SPOT:
                 size: float = 1
             else:
-                size: float = float(d["ctMult"])
+                size: float = float(d["ctVal"])#取ctValue，代表一张是多少个币
 
             contract: ContractData = ContractData(
                 symbol=symbol,
