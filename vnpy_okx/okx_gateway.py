@@ -397,6 +397,7 @@ class OkxRestApi(RestClient):
         buf: dict[datetime, BarData] = {}
         end_time: str = ""
         path: str = "/api/v5/market/candles"
+        req_start = req.start
 
         for i in range(15):
             # Create query params
@@ -453,6 +454,8 @@ class OkxRestApi(RestClient):
 
                 # Update end time
                 end_time = begin
+                if datetime.fromtimestamp(int(end_time) / 1000) < req_start:
+                    break
 
         index: list[datetime] = list(buf.keys())
         index.sort()
