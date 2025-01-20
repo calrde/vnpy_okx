@@ -454,7 +454,7 @@ class OkxRestApi(RestClient):
 
                 # Update end time
                 end_time = begin
-                if datetime.fromtimestamp(int(end_time) / 1000) < req_start:
+                if float(end_time) / 1000 < req_start.timestamp():
                     break
 
         index: list[datetime] = list(buf.keys())
