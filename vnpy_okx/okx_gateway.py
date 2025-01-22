@@ -940,8 +940,8 @@ def generate_timestamp() -> str:
 
 def parse_timestamp(timestamp: str) -> datetime:
     """Parse timestamp to datetime"""
-    dt: datetime = datetime.fromtimestamp(int(timestamp) / 1000)
-    return dt.replace(tzinfo=UTC_TZ)
+    dt: datetime = datetime.fromtimestamp(int(timestamp) / 1000,tz=UTC_TZ)
+    return dt
 
 
 def get_float_value(data: dict, key: str) -> float:
