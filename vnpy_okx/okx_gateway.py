@@ -149,7 +149,8 @@ class OkxGateway(BaseGateway):
         server: str = setting["Server"]
         proxy_host: str = setting["Proxy Host"]
         proxy_port: str = setting["Proxy Port"]
-
+        if setting:
+            self.write_log(f"connecting gateway for [{setting['cex']}.{setting['desc']}]")
         if proxy_port.isdigit():
             proxy_port = int(proxy_port)
         else:
@@ -877,7 +878,8 @@ class OkxWebsocketPrivateApi(WebsocketClient):
         # Generate local orderid
         self.order_count += 1
         count_str = str(self.order_count).rjust(6, "0")
-        orderid = f"{self.connect_time}{count_str}"
+        int(datetime.now().strftime("%y%m%d%H%M%S"))
+        orderid = f'{datetime.now().strftime("%y%m%d%H%M%S")}{count_str}'
 
         # Generate order params
         args: dict = {
