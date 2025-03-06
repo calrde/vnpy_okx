@@ -809,7 +809,7 @@ class OkxWebsocketPrivateApi(WebsocketClient):
         if packet["code"] != "0":
             code: str = packet["code"]
             msg: str = packet["msg"]
-            self.gateway.write_log(f"Cancel order failed, status code: {code}, message: {msg}")
+            self.gateway.write_log(f"Cancel order failed, status code: {code}, message: {msg} {packet['data']}")
             return
 
         # Failed to process
