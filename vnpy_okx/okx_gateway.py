@@ -218,9 +218,11 @@ class OkxGateway(BaseGateway):
         if len(self.orders) > 10000:
             sorted_keys = sorted(self.orders.keys()) #升序排序
             #留5000个够可，一个api以10s每个下单也可以支持8分钟内查找
-            print("okx 订单已超过1w个，自动清理一半...")
+            last_key = None
             for key in sorted_keys[:int(len(sorted_keys)/2)]:
                 self.orders.pop(key, None)
+                last_key = key
+            print(f"Okx 订单已超过1w个，已自动清理一半至 {last_key}...")
 
 
     def get_order(self, orderid: str) -> OrderData:
