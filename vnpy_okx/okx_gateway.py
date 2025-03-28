@@ -212,6 +212,16 @@ class OkxGateway(BaseGateway):
         """Save a copy of order and then pus"""
         self.orders[order.orderid] = order
         super().on_order(order)
+        self.clear_old_order()
+
+    def clear_old_order(self):
+        if len(self.orders) > 10000:
+            sorted_keys = sorted(self.orders.keys()) #升序排序
+            #留5000个够可，一个api以10s每个下单也可以支持8分钟内查找
+            print("okx 订单已超过1w个，自动清理一半...")
+            for key in sorted_keys[:int(len(sorted_keys)/2)]:
+                self.orders.pop(key, None)
+
 
     def get_order(self, orderid: str) -> OrderData:
         """Get previously saved order"""
