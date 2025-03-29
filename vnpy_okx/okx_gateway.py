@@ -73,6 +73,7 @@ STATUS_OKX2VT: dict[str, Status] = {
 ORDERTYPE_OKX2VT: dict[str, OrderType] = {
     "limit": OrderType.LIMIT,
     "fok": OrderType.FOK,
+    "post_only": OrderType.MAKER,
     "ioc": OrderType.FAK
 }
 ORDERTYPE_VT2OKX: dict[OrderType, str] = {v: k for k, v in ORDERTYPE_OKX2VT.items()}
