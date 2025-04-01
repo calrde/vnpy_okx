@@ -88,7 +88,11 @@ DIRECTION_VT2OKX: dict[Direction, str] = {v: k for k, v in DIRECTION_OKX2VT.item
 # Kline interval map
 INTERVAL_VT2OKX: dict[Interval, str] = {
     Interval.MINUTE: "1m",
+    Interval.MINUTE_5: "5m",
+    Interval.MINUTE_15: "15m",
+    Interval.MINUTE_30: "30m",
     Interval.HOUR: "1H",
+    Interval.HOUR_4: "4H",
     Interval.DAILY: "1D",
 }
 
