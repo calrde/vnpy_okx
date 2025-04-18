@@ -311,7 +311,7 @@ class OkxRestApi(RestClient):
         self.init(host, proxy_host, proxy_port)
 
         self.start()
-        self.gateway.write_log("REST API started")
+        self.gateway.write_log(f"{self.gateway_name} REST API started")
 
         self.query_time()
         self.query_order()
@@ -361,7 +361,7 @@ class OkxRestApi(RestClient):
             )
             self.gateway.on_order(order)
 
-        self.gateway.write_log("Open orders data is received")
+        self.gateway.write_log(f"{self.gateway_name} Open orders data is received")
 
     def on_query_contract(self, packet: dict, request: Request) -> None:
         """Callback of available contracts query"""
@@ -393,7 +393,7 @@ class OkxRestApi(RestClient):
             symbol_contract_map[contract.symbol] = contract
             self.gateway.on_contract(contract)
 
-        self.gateway.write_log(f"Available {d['instType']} contracts data is received")
+        self.gateway.write_log(f"{self.gateway_name} Available {d['instType']} contracts data is received")
 
     def on_error(
         self,
@@ -405,7 +405,7 @@ class OkxRestApi(RestClient):
         """General error callback"""
         detail: str = self.exception_detail(exception_type, exception_value, tb, request)
 
-        msg: str = f"Exception catched by REST API: {detail}"
+        msg: str = f"{self.gateway_name} Exception catched by REST API: {detail}"
         self.gateway.write_log(msg)
 
         print(detail)
@@ -436,7 +436,7 @@ class OkxRestApi(RestClient):
 
             # Break loop if request is failed
             if resp.status_code // 100 != 2:
-                msg = f"Query kline history failed, status code: {resp.status_code}, message: {resp.text}"
+                msg = f"{self.gateway_name} Query kline history failed, status code: {resp.status_code}, message: {resp.text}"
                 self.gateway.write_log(msg)
                 break
             else:
@@ -553,14 +553,14 @@ class OkxWebsocketPublicApi(WebsocketClient):
 
     def on_connected(self) -> None:
         """Callback when server is connected"""
-        self.gateway.write_log("Public websocket API is connected")
+        self.gateway.write_log("Okx Public websocket API is connected")
 
         for req in list(self.subscribed.values()):
             self.subscribe(req)
 
     def on_disconnected(self) -> None:
         """Callback when server is disconnected"""
-        self.gateway.write_log("Public websocket API is disconnected")
+        self.gateway.write_log("Okx Public websocket API is disconnected")
 
     def on_packet(self, packet: dict) -> None:
         """Callback of data update"""
@@ -571,7 +571,7 @@ class OkxWebsocketPublicApi(WebsocketClient):
             elif event == "error":
                 code: str = packet["code"]
                 msg: str = packet["msg"]
-                self.gateway.write_log(f"Public websocket API request failed, status code: {code}, message: {msg}")
+                self.gateway.write_log(f"Okx Public websocket API request failed, status code: {code}, message: {msg}")
         else:
             channel: str = packet["arg"]["channel"]
             callback: callable = self.callbacks.get(channel, None)
@@ -683,12 +683,12 @@ class OkxWebsocketPrivateApi(WebsocketClient):
 
     def on_connected(self) -> None:
         """Callback when server is connected"""
-        self.gateway.write_log("Private websocket API is connected")
+        self.gateway.write_log(f"{self.gateway_name} Private websocket API is connected")
         self.login()
 
     def on_disconnected(self) -> None:
         """Callback when server is disconnected"""
-        self.gateway.write_log("Private websocket API is disconnected")
+        self.gateway.write_log(f"{self.gateway_name} Private websocket API is disconnected")
 
     def on_packet(self, packet: dict) -> None:
         """Callback of data update"""
@@ -716,15 +716,15 @@ class OkxWebsocketPrivateApi(WebsocketClient):
         """Callback of login error"""
         code: str = packet["code"]
         msg: str = packet["msg"]
-        self.gateway.write_log(f"Priavte websocket API request failed, status code: {code}, message: {msg}")
+        self.gateway.write_log(f"{self.gateway_name} Priavte ws failed, status code: {code}, message: {msg}")
 
     def on_login(self, packet: dict) -> None:
         """Callback of user login"""
         if packet["code"] == '0':
-            self.gateway.write_log("Private websocket API login successful")
+            self.gateway.write_log(f"{self.gateway_name} Private websocket API login successful")
             self.subscribe_topic()
         else:
-            self.gateway.write_log("Private websocket API login failed")
+            self.gateway.write_log(f"{self.gateway_name} Private websocket API login failed")
 
     def on_order(self, packet: dict) -> None:
         """Callback of order update"""
@@ -818,7 +818,7 @@ class OkxWebsocketPrivateApi(WebsocketClient):
             self.gateway.on_order(copy(order))
 
             msg: str = d["sMsg"]
-            self.gateway.write_log(f"Send order failed, status code: {code}, message: {msg}")
+            self.gateway.write_log(f"{self.gateway_name} Send order failed, code: {code}, message: {msg}")
 
     def on_cancel_order(self, packet: dict) -> None:
         """Callback of cancel order"""
@@ -826,7 +826,7 @@ class OkxWebsocketPrivateApi(WebsocketClient):
         if packet["code"] != "0":
             code: str = packet["code"]
             msg: str = packet["msg"]
-            self.gateway.write_log(f"Cancel order failed, status code: {code}, message: {msg} {packet['data']}")
+            self.gateway.write_log(f"{self.gateway_name} Cancel order failed, code: {code}, message: {msg} {packet['data']}")
             return
 
         # Failed to process
@@ -837,7 +837,7 @@ class OkxWebsocketPrivateApi(WebsocketClient):
                 return
 
             msg: str = d["sMsg"]
-            self.gateway.write_log(f"Cancel order failed, status code: {code}, message: {msg}")
+            self.gateway.write_log(f"{self.gateway_name} Cancel order failed, status code: {code}, message: {msg}")
 
     def login(self) -> None:
         """User login"""
@@ -883,13 +883,13 @@ class OkxWebsocketPrivateApi(WebsocketClient):
         """Send new order"""
         # Check order type
         if req.type not in ORDERTYPE_VT2OKX:
-            self.gateway.write_log(f"Send order failed, order type not supported: {req.type.value}")
+            self.gateway.write_log(f"{self.gateway_name} Send order failed, order type not supported: {req.type.value}")
             return
 
         # Check symbol
         contract: ContractData = symbol_contract_map.get(req.symbol, None)
         if not contract:
-            self.gateway.write_log(f"Send order failed, symbol not found: {req.symbol}")
+            self.gateway.write_log(f"{self.gateway_name} Send order failed, symbol not found: {req.symbol}")
             return
 
         # Generate local orderid
