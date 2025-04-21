@@ -553,14 +553,16 @@ class OkxWebsocketPublicApi(WebsocketClient):
 
     def on_connected(self) -> None:
         """Callback when server is connected"""
-        self.gateway.write_log("Okx Public websocket API is connected")
+        if len(self.subscribed):
+            self.gateway.write_log(f"Okx {self.gateway_name} Public websocket API is connected")
 
         for req in list(self.subscribed.values()):
             self.subscribe(req)
 
     def on_disconnected(self) -> None:
         """Callback when server is disconnected"""
-        self.gateway.write_log("Okx Public websocket API is disconnected")
+        if len(self.subscribed):
+            self.gateway.write_log(f"Okx {self.gateway_name} Public websocket API is disconnected")
 
     def on_packet(self, packet: dict) -> None:
         """Callback of data update"""
