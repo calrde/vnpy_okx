@@ -377,6 +377,13 @@ class OkxRestApi(RestClient):
             else:
                 size: float = float(d["ctVal"])#取ctValue，代表一张是多少个币
 
+            try:
+                pricetick = float(d["tickSz"]),
+                min_volume = float(d["minSz"]),
+            except Exception as e:
+                print(f"on_query_contract has error on : {d}")
+                continue
+
             contract: ContractData = ContractData(
                 symbol=symbol,
                 exchange=Exchange.OKX,
