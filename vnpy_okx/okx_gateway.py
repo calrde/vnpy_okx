@@ -903,9 +903,9 @@ class OkxWebsocketPrivateApi(WebsocketClient):
 
         # Generate local orderid
         self.order_count += 1
-        count_str = str(self.order_count).rjust(6, "0")
+        count_str = str(self.order_count).rjust(4, "0")
         # int(datetime.now().strftime("%y%m%d%H%M%S"))
-        orderid = f'{datetime.now().strftime("%y%m%d%H%M%Ss%f")[:-3]}{req.symbol.replace("-","")}{count_str}'
+        orderid = f'{datetime.now().strftime("%y%m%d%H%M%Ss%f")[:-3]}{req.symbol.replace("-","").replace("USDTSWAP","")}{count_str}'
 
         # Generate order params
         args: dict = {
