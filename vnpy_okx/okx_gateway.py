@@ -33,6 +33,7 @@ from vnpy_evo.trader.object import (
     PositionData,
     SubscribeRequest,
     TickData,
+    LqOrderData,
     TradeData
 )
 from vnpy_rest import Request, RestClient
@@ -505,9 +506,11 @@ class OkxWebsocketPublicApi(WebsocketClient):
 
         self.subscribed: dict[str, SubscribeRequest] = {}
         self.ticks: dict[str, TickData] = {}
+        self.lq_orders: dict[str, LqOrderData] = {}
 
         self.callbacks: dict[str, callable] = {
             "tickers": self.on_ticker,
+            "liquidation-orders": self.on_liquidation_orders,
             "books5": self.on_depth
         }
 
@@ -544,6 +547,15 @@ class OkxWebsocketPublicApi(WebsocketClient):
         )
         self.ticks[req.symbol] = tick
 
+        lq_order: LqOrderData = LqOrderData(
+            symbol=req.symbol,
+            exchange=req.exchange,
+            name=req.symbol,
+            datetime=datetime.now(UTC_TZ),
+            gateway_name=self.gateway_name,
+        )
+        self.lq_orders[req.symbol] = lq_order
+
         # Send request to subscribe
         args: list = []
         for channel in ["tickers", "books5"]:
@@ -558,8 +570,21 @@ class OkxWebsocketPublicApi(WebsocketClient):
         }
         self.send_packet(req)
 
+    def subscribe_liquidation_orders(self):
+        """订阅永续爆仓单"""
+        args: list = []
+        args.append({
+                "channel": "liquidation-orders",
+                "instId": "SWAP"
+            })
+        req: dict = {
+            "op": "subscribe",
+            "args": args
+        }
+        self.send_packet(req)
     def on_connected(self) -> None:
         """Callback when server is connected"""
+        self.subscribe_liquidation_orders()
         if len(self.subscribed):
             self.gateway.write_log(f"Okx {self.gateway_name} Public websocket API is connected")
 
@@ -597,6 +622,16 @@ class OkxWebsocketPublicApi(WebsocketClient):
         self.gateway.write_log(msg)
 
         print(detail)
+
+    def on_liquidation_orders(self, data: list) -> None:
+        """Callback of liquidation_orders update"""
+        for d in data:
+            lq_order: LqOrderData = self.lq_orders[d["instId"]]
+            for detail in d["details"]:
+                lq_order.bkPx = float(detail["bkPx"])
+                lq_order.size = float(detail["sz"])
+                lq_order.side = float(detail["side"])
+
 
     def on_ticker(self, data: list) -> None:
         """Callback of ticker update"""
