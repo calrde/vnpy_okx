@@ -575,12 +575,13 @@ class OkxWebsocketPublicApi(WebsocketClient):
         args: list = []
         args.append({
                 "channel": "liquidation-orders",
-                "instId": "SWAP"
+                "instType": "SWAP"
             })
         req: dict = {
             "op": "subscribe",
             "args": args
         }
+        # print(req)
         self.send_packet(req)
     def on_connected(self) -> None:
         """Callback when server is connected"""
@@ -601,6 +602,7 @@ class OkxWebsocketPublicApi(WebsocketClient):
         if "event" in packet:
             event: str = packet["event"]
             if event == "subscribe":
+                # print(self.gateway_name, packet)
                 return
             elif event == "error":
                 code: str = packet["code"]
@@ -621,16 +623,24 @@ class OkxWebsocketPublicApi(WebsocketClient):
         msg: str = f"Exception catched by public websocket API: {detail}"
         self.gateway.write_log(msg)
 
-        print(detail)
+        # print(detail)
 
     def on_liquidation_orders(self, data: list) -> None:
         """Callback of liquidation_orders update"""
         for d in data:
+            if d["instId"] not in self.lq_orders:
+                detail = d["details"][0]
+                print(f'{ parse_timestamp(detail["ts"])} {d["instId"]} {detail["side"]} price:{detail["bkPx"]} size:{detail["sz"]}')
+                continue
+            # print(d)
             lq_order: LqOrderData = self.lq_orders[d["instId"]]
             for detail in d["details"]:
                 lq_order.bkPx = float(detail["bkPx"])
                 lq_order.size = float(detail["sz"])
-                lq_order.side = float(detail["side"])
+                lq_order.side = detail["side"]
+                lq_order.datetime = parse_timestamp(detail["ts"])
+                self.gateway.on_lq_order(copy(lq_order))
+                print(f'{lq_order.datetime} {d["instId"]} {lq_order.side} price:{lq_order.bkPx} size:{lq_order.size}')
 
 
     def on_ticker(self, data: list) -> None:
