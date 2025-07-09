@@ -34,6 +34,7 @@ from vnpy_evo.trader.object import (
     SubscribeRequest,
     TickData,
     LqOrderData,
+    FundingData,
     TradeData
 )
 from vnpy_rest import Request, RestClient
@@ -510,6 +511,7 @@ class OkxWebsocketPublicApi(WebsocketClient):
 
         self.callbacks: dict[str, callable] = {
             "tickers": self.on_ticker,
+            "funding-rate": self.on_funding_rate,
             "liquidation-orders": self.on_liquidation_orders,
             "books5": self.on_depth
         }
@@ -553,12 +555,15 @@ class OkxWebsocketPublicApi(WebsocketClient):
             name=req.symbol,
             datetime=datetime.now(UTC_TZ),
             gateway_name=self.gateway_name,
+            bkPx=0.0,
+            size=0.0,
+            side= ""
         )
         self.lq_orders[req.symbol] = lq_order
 
         # Send request to subscribe
         args: list = []
-        for channel in ["tickers", "books5"]:
+        for channel in ["tickers", "books5","funding-rate"]:
             args.append({
                 "channel": channel,
                 "instId": req.symbol
@@ -625,12 +630,29 @@ class OkxWebsocketPublicApi(WebsocketClient):
 
         # print(detail)
 
+    def on_funding_rate(self, data: list) -> None:
+        """Callback of liquidation_orders update"""
+        for d in data:
+            fdrate: FundingData = FundingData(
+                symbol=d["instId"],
+                exchange=Exchange.OKX,
+                datetime=parse_timestamp(d["ts"]),
+                nextFundingTime=float(d["fundingTime"]),
+                interestRate=float(d["interestRate"]),
+                lastFundingRate=float(d["fundingRate"]),
+                markPrice=None,
+                indexPrice=None,
+                gateway_name=self.gateway_name,
+            )
+
+            self.gateway.on_funding_rate(fdrate)
+
     def on_liquidation_orders(self, data: list) -> None:
         """Callback of liquidation_orders update"""
         for d in data:
             if d["instId"] not in self.lq_orders:
                 detail = d["details"][0]
-                print(f'{ parse_timestamp(detail["ts"])} {d["instId"]} {detail["side"]} price:{detail["bkPx"]} size:{detail["sz"]}')
+                print(f'{str(parse_timestamp(detail["ts"]))[:-9]} {d["instId"]} {detail["side"]} price:{detail["bkPx"]} size:{detail["sz"]}')
                 continue
             # print(d)
             lq_order: LqOrderData = self.lq_orders[d["instId"]]
@@ -640,7 +662,7 @@ class OkxWebsocketPublicApi(WebsocketClient):
                 lq_order.side = detail["side"]
                 lq_order.datetime = parse_timestamp(detail["ts"])
                 self.gateway.on_lq_order(copy(lq_order))
-                print(f'{lq_order.datetime} {d["instId"]} {lq_order.side} price:{lq_order.bkPx} size:{lq_order.size}')
+                print(f'{str(lq_order.datetime)[:-9]} {d["instId"]} {lq_order.side} price:{lq_order.bkPx} size:{lq_order.size}')
 
 
     def on_ticker(self, data: list) -> None:
@@ -958,7 +980,7 @@ class OkxWebsocketPrivateApi(WebsocketClient):
             "clOrdId": orderid,
             "side": DIRECTION_VT2OKX[req.direction],
             "ordType": ORDERTYPE_VT2OKX[req.type],
-            "px": str(req.price),
+            "px": format(req.price, '.10f'),
             "sz": str(req.volume)
         }
 
