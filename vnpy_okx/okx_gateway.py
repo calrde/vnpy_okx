@@ -652,7 +652,7 @@ class OkxWebsocketPublicApi(WebsocketClient):
         for d in data:
             if d["instId"] not in self.lq_orders:
                 detail = d["details"][0]
-                print(f'{str(parse_timestamp(detail["ts"]))[:-9]} {d["instId"]} {detail["side"]} price:{detail["bkPx"]} size:{detail["sz"]}')
+                # print(f'{str(parse_timestamp(detail["ts"]))[:-9]} {d["instId"]} {detail["side"]} price:{detail["bkPx"]} size:{detail["sz"]}')
                 continue
             # print(d)
             lq_order: LqOrderData = self.lq_orders[d["instId"]]
@@ -662,7 +662,7 @@ class OkxWebsocketPublicApi(WebsocketClient):
                 lq_order.side = detail["side"]
                 lq_order.datetime = parse_timestamp(detail["ts"])
                 self.gateway.on_lq_order(copy(lq_order))
-                print(f'{str(lq_order.datetime)[:-9]} {d["instId"]} {lq_order.side} price:{lq_order.bkPx} size:{lq_order.size}')
+                # print(f'{str(lq_order.datetime)[:-9]} {d["instId"]} {lq_order.side} price:{lq_order.bkPx} size:{lq_order.size}')
 
 
     def on_ticker(self, data: list) -> None:
