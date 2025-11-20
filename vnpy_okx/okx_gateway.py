@@ -759,12 +759,13 @@ class OkxWebsocketPrivateApi(WebsocketClient):
 
     def on_connected(self) -> None:
         """Callback when server is connected"""
-        self.gateway.write_log(f"{self.gateway_name} Private websocket API is connected")
+        # self.gateway.write_log(f"{self.gateway_name} Private websocket API is connected")
         self.login()
 
     def on_disconnected(self) -> None:
         """Callback when server is disconnected"""
-        self.gateway.write_log(f"{self.gateway_name} Private websocket API is disconnected")
+        # self.gateway.write_log(f"{self.gateway_name} Private websocket API is disconnected")
+        pass
 
     def on_packet(self, packet: dict) -> None:
         """Callback of data update"""
@@ -797,10 +798,11 @@ class OkxWebsocketPrivateApi(WebsocketClient):
     def on_login(self, packet: dict) -> None:
         """Callback of user login"""
         if packet["code"] == '0':
-            self.gateway.write_log(f"{self.gateway_name} Private websocket API login successful")
+            # self.gateway.write_log(f"{self.gateway_name} Private websocket API login successful")
             self.subscribe_topic()
         else:
             self.gateway.write_log(f"{self.gateway_name} Private websocket API login failed")
+
 
     def on_order(self, packet: dict) -> None:
         """Callback of order update"""
