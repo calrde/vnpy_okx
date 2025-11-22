@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 from types import TracebackType
 # version 1.1.1
 from requests import Response
+import websocket
 
 from vnpy_evo.event import EventEngine
 from vnpy_evo.trader.constant import (
@@ -597,7 +598,7 @@ class OkxWebsocketPublicApi(WebsocketClient):
         for req in list(self.subscribed.values()):
             self.subscribe(req)
 
-    def on_disconnected(self) -> None:
+    def on_disconnected(self, status_code: int, msg: str) -> None:
         """Callback when server is disconnected"""
         if len(self.subscribed):
             self.gateway.write_log(f"Okx {self.gateway_name} Public websocket API is disconnected")
@@ -621,11 +622,9 @@ class OkxWebsocketPublicApi(WebsocketClient):
                 data: list = packet["data"]
                 callback(data)
 
-    def on_error(self, exception_type: type, exception_value: Exception, tb) -> None:
+    def on_error(self, e: Exception) -> None:
         """General error callback"""
-        detail: str = self.exception_detail(exception_type, exception_value, tb)
-
-        msg: str = f"Exception catched by public websocket API: {detail}"
+        msg: str = f"Exception catched by public websocket API: {e}"
         self.gateway.write_log(msg)
 
         # print(detail)
@@ -762,7 +761,7 @@ class OkxWebsocketPrivateApi(WebsocketClient):
         # self.gateway.write_log(f"{self.gateway_name} Private websocket API is connected")
         self.login()
 
-    def on_disconnected(self) -> None:
+    def on_disconnected(self, status_code: int, msg: str) -> None:
         """Callback when server is disconnected"""
         # self.gateway.write_log(f"{self.gateway_name} Private websocket API is disconnected")
         pass
@@ -780,14 +779,10 @@ class OkxWebsocketPrivateApi(WebsocketClient):
         if callback:
             callback(packet)
 
-    def on_error(self, exception_type: type, exception_value: Exception, tb) -> None:
+    def on_error(self, e: Exception) -> None:
         """General error callback"""
-        detail: str = self.exception_detail(exception_type, exception_value, tb)
-
-        msg: str = f"私有频道触发异常: {detail}"
+        msg: str = f"私有频道触发异常: {e}"
         self.gateway.write_log(msg)
-
-        print(detail)
 
     def on_api_error(self, packet: dict) -> None:
         """Callback of login error"""
